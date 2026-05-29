@@ -39,7 +39,7 @@ import {
   Briefcase,
   Wallet,
   Eye,
-  SmartPhone,
+  Smartphone,
 } from 'lucide-react'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -415,7 +415,7 @@ export function CustomerDetail({ customerId, onBack, onViewContract }: CustomerD
                       <TableCell>
                         <div>
                           <div className="flex items-center gap-1.5 font-medium">
-                            <SmartPhone className="h-3.5 w-3.5 text-muted-foreground" />
+                            <Smartphone className="h-3.5 w-3.5 text-muted-foreground" />
                             {contract.item.brand} {contract.item.model}
                             {contract.item.variant ? ` (${contract.item.variant})` : ''}
                           </div>

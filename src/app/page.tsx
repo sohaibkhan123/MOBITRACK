@@ -11,6 +11,7 @@ import { DueTrackingPage } from '@/components/due-tracking'
 import { VendorContractsPage } from '@/components/vendor-contracts'
 import { ContractDetail } from '@/components/contract-detail'
 import { CustomerDetail } from '@/components/customer-detail'
+import { InstallmentsPage } from '@/components/installments'
 import { useState } from 'react'
 import {
   LayoutDashboard,
@@ -25,6 +26,7 @@ import {
   ChevronRight,
   Wallet,
   AlertCircle,
+  CalendarClock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -36,6 +38,7 @@ const navItems: { page: Page; label: string; icon: React.ReactNode }[] = [
   { page: 'customers', label: 'Customers', icon: <Users className="h-5 w-5" /> },
   { page: 'vendors', label: 'Vendors', icon: <Store className="h-5 w-5" /> },
   { page: 'contracts', label: 'Contracts', icon: <FileText className="h-5 w-5" /> },
+  { page: 'installments', label: 'Installments', icon: <CalendarClock className="h-5 w-5" /> },
   { page: 'payments', label: 'Payments', icon: <CreditCard className="h-5 w-5" /> },
   { page: 'vendor-contracts', label: 'Vendor Payables', icon: <Wallet className="h-5 w-5" /> },
   { page: 'due-tracking', label: 'Due Tracking', icon: <AlertCircle className="h-5 w-5" /> },
@@ -70,6 +73,8 @@ function PageContent({ page }: { page: Page }) {
       return <VendorsPage />
     case 'contracts':
       return <ContractsPage />
+    case 'installments':
+      return <InstallmentsPage />
     case 'payments':
       return <PaymentsPage />
     case 'vendor-contracts':

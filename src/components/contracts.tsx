@@ -52,6 +52,7 @@ import {
   ChevronRight,
   Loader2,
   Eye,
+  CreditCard,
 } from 'lucide-react'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -128,6 +129,24 @@ interface ContractFormData {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+function calculateNextDueDate(saleDate: string, frequency: string): string {
+  if (!saleDate) return ''
+  const d = new Date(saleDate + 'T00:00:00')
+  switch (frequency) {
+    case 'Weekly':
+      d.setDate(d.getDate() + 7)
+      break
+    case 'Bi-weekly':
+      d.setDate(d.getDate() + 14)
+      break
+    case 'Monthly':
+    default:
+      d.setMonth(d.getMonth() + 1)
+      break
+  }
+  return d.toISOString().split('T')[0]
+}
+
 function formatPKR(amount: number): string {
   return new Intl.NumberFormat('en-PK', {
     style: 'currency',
@@ -198,6 +217,15 @@ export function ContractsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [contractToDelete, setContractToDelete] = useState<Contract | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Track if nextDueDate was manually set by user
+  const [nextDueDateManual, setNextDueDateManual] = useState(false)
+
+  // Quick Pay dialog state
+  const [payDialogOpen, setPayDialogOpen] = useState(false)
+  const [payContract, setPayContract] = useState<Contract | null>(null)
+  const [payForm, setPayForm] = useState({ amount: '', date: '', method: 'Cash', receiptNumber: '' })
+  const [paySubmitting, setPaySubmitting] = useState(false)
 
   // ─── Fetch Data ─────────────────────────────────────────────────────────
 
@@ -273,6 +301,7 @@ export function ContractsPage() {
   const openAddDialog = () => {
     setEditingContract(null)
     setFormData(getInitialFormData(contracts))
+    setNextDueDateManual(false)
     setDialogOpen(true)
   }
 
@@ -306,6 +335,26 @@ export function ContractsPage() {
           updated.purchasePrice = item.purchasePrice
           if (item.salePrice && !editingContract) {
             updated.totalPrice = item.salePrice
+          }
+        }
+      }
+
+      // Auto-calculate nextDueDate for new contracts when relevant fields change
+      if (!editingContract) {
+        const shouldAutoCalc =
+          (field === 'saleDate' || field === 'frequency' || field === 'downPayment' || field === 'installmentsCount')
+
+        if (field === 'nextDueDate') {
+          // User manually edited nextDueDate
+          setNextDueDateManual(true)
+        } else if (shouldAutoCalc && !nextDueDateManual) {
+          const saleDate = field === 'saleDate' ? String(value) : updated.saleDate
+          const frequency = field === 'frequency' ? String(value) : updated.frequency
+          const downPayment = field === 'downPayment' ? Number(value) : updated.downPayment
+          const installmentsCount = field === 'installmentsCount' ? Number(value) : updated.installmentsCount
+
+          if (saleDate && (downPayment > 0 || installmentsCount > 1)) {
+            updated.nextDueDate = calculateNextDueDate(saleDate, frequency)
           }
         }
       }
@@ -514,6 +563,7 @@ export function ContractsPage() {
                 <TableHead className="hidden lg:table-cell">Down Payment</TableHead>
                 <TableHead className="hidden lg:table-cell">Remaining</TableHead>
                 <TableHead className="hidden md:table-cell">Installments</TableHead>
+                <TableHead className="hidden lg:table-cell">Progress</TableHead>
                 <TableHead className="hidden xl:table-cell">Next Due</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -522,7 +572,7 @@ export function ContractsPage() {
             <TableBody>
               {filteredContracts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
                     {searchQuery || statusFilter !== 'All'
                       ? 'No contracts match your filters'
                       : 'No contracts yet. Create your first contract!'}
@@ -574,6 +624,30 @@ export function ContractsPage() {
                           ({contract.frequency})
                         </span>
                       </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {(() => {
+                          const paid = Math.min(
+                            contract.installmentsCount,
+                            contract.installmentAmount > 0
+                              ? Math.round(contract.totalPaid / contract.installmentAmount)
+                              : 0
+                          )
+                          const pct = contract.installmentsCount > 0 ? (paid / contract.installmentsCount) * 100 : 0
+                          return (
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-emerald-500 transition-all"
+                                  style={{ width: `${Math.min(100, pct)}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {paid}/{contract.installmentsCount}
+                              </span>
+                            </div>
+                          )
+                        })()}
+                      </TableCell>
                       <TableCell className="hidden xl:table-cell">
                         {contract.nextDueDate ? (
                           <div className="flex items-center gap-1">
@@ -589,6 +663,27 @@ export function ContractsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {contract.status === 'Running' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setPayContract(contract)
+                                setPayForm({
+                                  amount: String(contract.installmentAmount),
+                                  date: new Date().toISOString().split('T')[0],
+                                  method: 'Cash',
+                                  receiptNumber: '',
+                                })
+                                setPayDialogOpen(true)
+                              }}
+                              className="h-7 gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                              title="Quick Pay"
+                            >
+                              <CreditCard className="size-3" />
+                              <span className="hidden sm:inline text-xs">Pay</span>
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -624,7 +719,7 @@ export function ContractsPage() {
                     {/* Expanded Payment History Row */}
                     {expandedRows.has(contract.id) && (
                       <TableRow key={`${contract.id}-payments`} className="bg-muted/30">
-                        <TableCell colSpan={11} className="p-0">
+                        <TableCell colSpan={12} className="p-0">
                           <div className="px-6 py-4">
                             <div className="flex items-center gap-2 mb-3">
                               <FileText className="size-4 text-muted-foreground" />
@@ -927,6 +1022,9 @@ export function ContractsPage() {
                   value={formData.nextDueDate}
                   onChange={(e) => handleFieldChange('nextDueDate', e.target.value)}
                 />
+                {!editingContract && !nextDueDateManual && formData.saleDate && (formData.downPayment > 0 || formData.installmentsCount > 1) && (
+                  <p className="text-xs text-emerald-600 mt-1">Auto-calculated based on sale date & frequency</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
@@ -958,6 +1056,134 @@ export function ContractsPage() {
             <Button onClick={handleSubmit} disabled={submitting}>
               {submitting && <Loader2 className="size-4 mr-2 animate-spin" />}
               {editingContract ? 'Update Contract' : 'Create Contract'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Quick Pay Dialog ───────────────────────────────────────────────── */}
+
+      <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="size-5" />
+              Quick Pay Installment
+            </DialogTitle>
+            <DialogDescription>
+              Record a payment for{' '}
+              <span className="font-medium">{payContract?.customer.fullName}</span>
+              {payContract && (
+                <>
+                  {' '}— {payContract.item.brand} {payContract.item.model}
+                  <span className="block mt-1 text-xs">
+                    Remaining: {formatPKR(payContract.remainingAmount)} · Installment:{' '}
+                    {formatPKR(payContract.installmentAmount)}
+                  </span>
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="pay-amount">Amount *</Label>
+              <Input
+                id="pay-amount"
+                type="number"
+                value={payForm.amount}
+                onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })}
+                placeholder="Enter amount"
+              />
+              {payContract && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Default installment amount: {formatPKR(payContract.installmentAmount)}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="pay-date">Date *</Label>
+              <Input
+                id="pay-date"
+                type="date"
+                value={payForm.date}
+                onChange={(e) => setPayForm({ ...payForm, date: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="pay-method">Payment Method</Label>
+              <Select
+                value={payForm.method}
+                onValueChange={(value) => setPayForm({ ...payForm, method: value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="Cheque">Cheque</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="pay-receipt">Receipt Number</Label>
+              <Input
+                id="pay-receipt"
+                value={payForm.receiptNumber}
+                onChange={(e) => setPayForm({ ...payForm, receiptNumber: e.target.value })}
+                placeholder="Optional receipt #"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPayDialogOpen(false)}
+              disabled={paySubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!payContract || !payForm.amount || !payForm.date) {
+                  toast({ title: 'Validation Error', description: 'Amount and date are required', variant: 'destructive' })
+                  return
+                }
+                const amount = parseFloat(payForm.amount)
+                if (isNaN(amount) || amount <= 0) {
+                  toast({ title: 'Validation Error', description: 'Please enter a valid amount', variant: 'destructive' })
+                  return
+                }
+                setPaySubmitting(true)
+                try {
+                  const res = await fetch('/api/payments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      contractId: payContract.id,
+                      customerId: payContract.customerId,
+                      amount,
+                      date: payForm.date,
+                      method: payForm.method,
+                      receiptNumber: payForm.receiptNumber,
+                    }),
+                  })
+                  if (!res.ok) throw new Error('Failed to record payment')
+                  toast({ title: 'Success', description: `Payment of ${formatPKR(amount)} recorded for ${payContract.customer.fullName}` })
+                  setPayDialogOpen(false)
+                  setPayContract(null)
+                  fetchContracts()
+                } catch {
+                  toast({ title: 'Error', description: 'Failed to record payment', variant: 'destructive' })
+                } finally {
+                  setPaySubmitting(false)
+                }
+              }}
+              disabled={paySubmitting}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {paySubmitting && <Loader2 className="size-4 mr-2 animate-spin" />}
+              Record Payment
             </Button>
           </DialogFooter>
         </DialogContent>
