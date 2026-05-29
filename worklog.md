@@ -53,3 +53,24 @@ Stage Summary:
 - Contracts page now auto-calculates nextDueDate for new contracts
 - Installment progress is visually displayed in the contracts list
 - Quick Pay feature allows recording payments directly from the contracts page
+
+---
+Task ID: 4
+Agent: main
+Task: Fix React key prop error and installment payment issues
+
+Work Log:
+- Fixed React key prop error in contracts.tsx: replaced `<>` fragment with `<Fragment key={contract.id}>` inside `.map()` calls
+- Fixed same React key prop error in installments.tsx: same fragment key fix
+- Fixed same React key prop error in vendor-contracts.tsx: same fragment key fix
+- Fixed same React key prop error in vendors.tsx: same fragment key fix
+- Fixed Quick Pay in contracts.tsx: added `nextDueDateSet` field to payForm state
+- Updated Quick Pay button onClick to auto-calculate next due date after payment
+- Updated payment POST payload to include `receivedBy` and `nextDueDateSet` fields
+- Updated payment method options from Cash/Bank Transfer/Cheque to Cash/Bank Transfer/EasyPaisa/JazzCash
+- Ran lint - all clean, no errors
+
+Stage Summary:
+- Console error "Each child in a list should have a unique key prop" is now resolved across all components
+- Quick Pay in contracts page now properly updates the contract's nextDueDate after recording a payment
+- Payment methods now match the Pakistani market (EasyPaisa, JazzCash)

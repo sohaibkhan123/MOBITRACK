@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Fragment } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import {
   Card,
@@ -401,9 +401,8 @@ export function VendorContractsPage() {
                   {filteredContracts.map((contract) => {
                     const isExpanded = expandedRows.has(contract.id)
                     return (
-                      <>
+                      <Fragment key={contract.id}>
                         <TableRow
-                          key={contract.id}
                           className="cursor-pointer hover:bg-muted/50"
                           onClick={() => toggleExpand(contract.id)}
                         >
@@ -581,7 +580,7 @@ export function VendorContractsPage() {
                             </TableCell>
                           </TableRow>
                         )}
-                      </>
+                      </Fragment>
                     )
                   })}
                 </TableBody>

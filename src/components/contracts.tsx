@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Fragment } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { useAppStore } from '@/lib/store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -224,7 +224,7 @@ export function ContractsPage() {
   // Quick Pay dialog state
   const [payDialogOpen, setPayDialogOpen] = useState(false)
   const [payContract, setPayContract] = useState<Contract | null>(null)
-  const [payForm, setPayForm] = useState({ amount: '', date: '', method: 'Cash', receiptNumber: '' })
+  const [payForm, setPayForm] = useState({ amount: '', date: '', method: 'Cash', receiptNumber: '', nextDueDateSet: '' })
   const [paySubmitting, setPaySubmitting] = useState(false)
 
   // ─── Fetch Data ─────────────────────────────────────────────────────────
@@ -580,8 +580,8 @@ export function ContractsPage() {
                 </TableRow>
               ) : (
                 filteredContracts.map((contract) => (
-                  <>
-                    <TableRow key={contract.id} className="group">
+                  <Fragment key={contract.id}>
+                    <TableRow className="group">
                       <TableCell>
                         <Button
                           variant="ghost"
@@ -669,11 +669,16 @@ export function ContractsPage() {
                               size="sm"
                               onClick={() => {
                                 setPayContract(contract)
+                                // Calculate next due date after this payment
+                                const nextDue = contract.nextDueDate
+                                  ? calculateNextDueDate(contract.nextDueDate, contract.frequency)
+                                  : calculateNextDueDate(contract.saleDate, contract.frequency)
                                 setPayForm({
                                   amount: String(contract.installmentAmount),
                                   date: new Date().toISOString().split('T')[0],
                                   method: 'Cash',
                                   receiptNumber: '',
+                                  nextDueDateSet: nextDue,
                                 })
                                 setPayDialogOpen(true)
                               }}
@@ -769,7 +774,7 @@ export function ContractsPage() {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 ))
               )}
             </TableBody>
@@ -1121,7 +1126,8 @@ export function ContractsPage() {
                 <SelectContent>
                   <SelectItem value="Cash">Cash</SelectItem>
                   <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="Cheque">Cheque</SelectItem>
+                  <SelectItem value="EasyPaisa">EasyPaisa</SelectItem>
+                  <SelectItem value="JazzCash">JazzCash</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1165,7 +1171,9 @@ export function ContractsPage() {
                       amount,
                       date: payForm.date,
                       method: payForm.method,
+                      receivedBy: 'System',
                       receiptNumber: payForm.receiptNumber,
+                      nextDueDateSet: payForm.nextDueDateSet || null,
                     }),
                   })
                   if (!res.ok) throw new Error('Failed to record payment')

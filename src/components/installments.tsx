@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Fragment } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { useAppStore } from '@/lib/store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -663,8 +663,8 @@ export function InstallmentsPage() {
                     const schedule = buildInstallmentSchedule(contract)
 
                     return (
-                      <>
-                        <TableRow key={contract.id} className="group">
+                      <Fragment key={contract.id}>
+                        <TableRow className="group">
                           {/* Expand Button */}
                           <TableCell>
                             <Button
@@ -878,7 +878,7 @@ export function InstallmentsPage() {
                             </TableCell>
                           </TableRow>
                         )}
-                      </>
+                      </Fragment>
                     )
                   })
                 )}
