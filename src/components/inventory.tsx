@@ -104,6 +104,10 @@ interface FormData {
   purchaseDate: string
   type: string
   notes: string
+  // Vendor installment fields
+  advancePaid: string
+  installmentsCount: string
+  installmentAmount: string
 }
 
 const emptyForm: FormData = {
@@ -123,6 +127,9 @@ const emptyForm: FormData = {
   purchaseDate: '',
   type: 'Mobile',
   notes: '',
+  advancePaid: '',
+  installmentsCount: '',
+  installmentAmount: '',
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -240,6 +247,9 @@ export function InventoryPage() {
         : '',
       type: item.type || 'Mobile',
       notes: item.notes || '',
+      advancePaid: '',
+      installmentsCount: '',
+      installmentAmount: '',
     })
     setDialogOpen(true)
   }
@@ -275,6 +285,10 @@ export function InventoryPage() {
         purchaseDate: formData.purchaseDate,
         type: formData.type,
         notes: formData.notes.trim() || null,
+        // Vendor installment fields
+        advancePaid: formData.advancePaid ? Number(formData.advancePaid) : undefined,
+        installmentsCount: formData.installmentsCount ? Number(formData.installmentsCount) : undefined,
+        installmentAmount: formData.installmentAmount ? Number(formData.installmentAmount) : undefined,
       }
 
       if (editingItem) {
@@ -766,6 +780,61 @@ export function InventoryPage() {
                 </Select>
               </div>
             </div>
+
+            {/* Vendor Installment Section — only shown when vendor selected & adding new */}
+            {formData.vendorId && formData.vendorId !== '_none' && !editingItem && (
+              <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                    Vendor Purchase Installment
+                  </span>
+                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800">
+                    Optional
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  If purchasing from this vendor on installments, fill in the details below. A vendor contract will be created automatically.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="advancePaid">Advance Paid</Label>
+                    <Input
+                      id="advancePaid"
+                      type="number"
+                      placeholder="e.g. 50000"
+                      value={formData.advancePaid}
+                      onChange={(e) => updateField('advancePaid', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="installmentsCount"># of Installments</Label>
+                    <Input
+                      id="installmentsCount"
+                      type="number"
+                      min="1"
+                      placeholder="e.g. 6"
+                      value={formData.installmentsCount}
+                      onChange={(e) => updateField('installmentsCount', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="installmentAmount">Installment Amount</Label>
+                    <Input
+                      id="installmentAmount"
+                      type="number"
+                      placeholder="e.g. 40000"
+                      value={formData.installmentAmount}
+                      onChange={(e) => updateField('installmentAmount', e.target.value)}
+                    />
+                  </div>
+                </div>
+                {formData.purchasePrice && formData.advancePaid && formData.installmentsCount && (
+                  <div className="text-xs text-muted-foreground">
+                    Remaining: {formatPKR(Number(formData.purchasePrice) - Number(formData.advancePaid))} = {formData.installmentsCount} × {formData.installmentAmount ? formatPKR(Number(formData.installmentAmount)) : '—'}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Notes */}
             <div className="space-y-2">
