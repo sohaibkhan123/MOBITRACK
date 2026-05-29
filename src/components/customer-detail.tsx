@@ -19,12 +19,23 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import {
   ArrowLeft,
@@ -47,6 +58,7 @@ import {
 interface Contract {
   id: string
   contractNumber: string
+  customerId: string
   itemId: string
   saleDate: string
   purchasePrice: number
@@ -68,6 +80,7 @@ interface Contract {
     imei1: string | null
     imei2: string | null
   }
+  payments: Payment[]
 }
 
 interface Payment {
@@ -128,6 +141,12 @@ export function CustomerDetail({ customerId, onBack, onViewContract }: CustomerD
   const [loading, setLoading] = useState(true)
   const [ledgerOpen, setLedgerOpen] = useState(false)
 
+  // Quick Pay state
+  const [payDialogOpen, setPayDialogOpen] = useState(false)
+  const [payContract, setPayContract] = useState<Contract | null>(null)
+  const [payForm, setPayForm] = useState({ amount: '', date: '', method: 'Cash', receiptNumber: '', nextDueDateSet: '' })
+  const [paySubmitting, setPaySubmitting] = useState(false)
+
   // ─── Fetch Customer Data ────────────────────────────────────────────────
 
   const fetchCustomer = useCallback(async () => {
@@ -163,6 +182,83 @@ export function CustomerDetail({ customerId, onBack, onViewContract }: CustomerD
   const totalBalanceDue = customer
     ? customer.contracts.reduce((sum, c) => sum + c.remainingAmount, 0)
     : 0
+
+  // Quick Pay helpers
+  function calculateNextDueDate(currentDate: string, frequency: string): string {
+    if (!currentDate) return ''
+    const d = new Date(currentDate + 'T00:00:00')
+    switch (frequency) {
+      case 'Weekly':
+        d.setDate(d.getDate() + 7)
+        break
+      case 'Bi-weekly':
+        d.setDate(d.getDate() + 14)
+        break
+      case 'Monthly':
+      default:
+        d.setMonth(d.getMonth() + 1)
+        break
+    }
+    return d.toISOString().split('T')[0]
+  }
+
+  function getTodayStr(): string {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  }
+
+  const openQuickPay = (contract: Contract) => {
+    setPayContract(contract)
+    const nextDue = contract.nextDueDate
+      ? calculateNextDueDate(contract.nextDueDate, contract.frequency)
+      : calculateNextDueDate(contract.saleDate, contract.frequency)
+    setPayForm({
+      amount: String(contract.installmentAmount),
+      date: getTodayStr(),
+      method: 'Cash',
+      receiptNumber: '',
+      nextDueDateSet: nextDue,
+    })
+    setPayDialogOpen(true)
+  }
+
+  const handleQuickPay = async () => {
+    if (!payContract || !payForm.amount || !payForm.date) {
+      toast({ title: 'Validation Error', description: 'Amount and date are required', variant: 'destructive' })
+      return
+    }
+    const amount = parseFloat(payForm.amount)
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: 'Validation Error', description: 'Please enter a valid amount', variant: 'destructive' })
+      return
+    }
+    setPaySubmitting(true)
+    try {
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contractId: payContract.id,
+          customerId: payContract.customerId,
+          amount,
+          date: payForm.date,
+          method: payForm.method,
+          receivedBy: 'System',
+          receiptNumber: payForm.receiptNumber,
+          nextDueDateSet: payForm.nextDueDateSet || null,
+        }),
+      })
+      if (!res.ok) throw new Error('Failed to record payment')
+      toast({ title: 'Payment Recorded', description: `${formatCurrency(amount)} payment recorded for ${payContract.contractNumber}` })
+      setPayDialogOpen(false)
+      setPayContract(null)
+      fetchCustomer()
+    } catch {
+      toast({ title: 'Error', description: 'Failed to record payment', variant: 'destructive' })
+    } finally {
+      setPaySubmitting(false)
+    }
+  }
 
   // Sort payments by date descending
   const sortedPayments = customer
@@ -402,8 +498,10 @@ export function CustomerDetail({ customerId, onBack, onViewContract }: CustomerD
                     <TableHead>Contract #</TableHead>
                     <TableHead>Mobile Info</TableHead>
                     <TableHead className="text-right">Total Price</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">Paid / Remaining</TableHead>
+                    <TableHead className="hidden md:table-cell">Next Due</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -429,23 +527,50 @@ export function CustomerDetail({ customerId, onBack, onViewContract }: CustomerD
                       <TableCell className="text-right font-medium">
                         {formatCurrency(contract.totalPrice)}
                       </TableCell>
+                      <TableCell className="text-right hidden sm:table-cell">
+                        <div className="text-xs space-y-0.5">
+                          <div className="text-emerald-600 font-medium">{formatCurrency(contract.totalPaid)}</div>
+                          <div className={contract.remainingAmount > 0 ? 'text-rose-600 font-medium' : 'text-emerald-600'}>{formatCurrency(contract.remainingAmount)}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {contract.nextDueDate ? (
+                          <span className={`text-xs ${contract.status === 'Running' && contract.nextDueDate < getTodayStr() ? 'text-rose-600 font-medium' : ''}`}>
+                            {formatDate(contract.nextDueDate)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <StatusBadge status={contract.status} />
                       </TableCell>
                       <TableCell className="text-right">
-                        {onViewContract ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onViewContract(contract.id)}
-                            className="h-8 text-xs"
-                          >
-                            <Eye className="h-3.5 w-3.5 mr-1.5" />
-                            View Ledger
-                          </Button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
+                        <div className="flex items-center justify-end gap-1">
+                          {contract.status === 'Running' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openQuickPay(contract)}
+                              className="h-7 gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 text-xs"
+                              title="Record Payment"
+                            >
+                              <CreditCard className="h-3 w-3" />
+                              <span className="hidden sm:inline">Pay</span>
+                            </Button>
+                          )}
+                          {onViewContract && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onViewContract(contract.id)}
+                              className="h-7 w-7 p-0 text-emerald-600 hover:text-emerald-700"
+                              title="View Ledger"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -737,6 +862,96 @@ export function CustomerDetail({ customerId, onBack, onViewContract }: CustomerD
               </p>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Quick Pay Dialog ──────────────────────────────────────────────── */}
+      <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Record Installment Payment
+            </DialogTitle>
+            <DialogDescription>
+              Payment for <span className="font-semibold">{payContract?.contractNumber}</span>
+              {payContract && (
+                <> — {payContract.item.brand} {payContract.item.model}</>
+              )}
+              <span className="block mt-1 text-xs">
+                Remaining: {payContract ? formatCurrency(payContract.remainingAmount) : '₨ 0'} · Installment: {payContract ? formatCurrency(payContract.installmentAmount) : '₨ 0'}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="pay-amount">Amount *</Label>
+              <Input
+                id="pay-amount"
+                type="number"
+                value={payForm.amount}
+                onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })}
+                placeholder="Enter amount"
+              />
+              {payContract && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Default installment amount: {formatCurrency(payContract.installmentAmount)}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="pay-date">Date *</Label>
+              <Input
+                id="pay-date"
+                type="date"
+                value={payForm.date}
+                onChange={(e) => setPayForm({ ...payForm, date: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="pay-method">Payment Method</Label>
+              <Select
+                value={payForm.method}
+                onValueChange={(value) => setPayForm({ ...payForm, method: value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="EasyPaisa">EasyPaisa</SelectItem>
+                  <SelectItem value="JazzCash">JazzCash</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="pay-receipt">Receipt Number</Label>
+              <Input
+                id="pay-receipt"
+                value={payForm.receiptNumber}
+                onChange={(e) => setPayForm({ ...payForm, receiptNumber: e.target.value })}
+                placeholder="Optional receipt #"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPayDialogOpen(false)}
+              disabled={paySubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleQuickPay}
+              disabled={paySubmitting}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {paySubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Record Payment
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

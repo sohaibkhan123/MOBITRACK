@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Fragment } from 'react'
 import {
   Card,
   CardContent,
@@ -41,11 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+// Collapsible removed - using simple conditional rendering instead
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -472,17 +468,11 @@ export function CustomersPage() {
                   {filteredCustomers.map((customer) => {
                     const isExpanded = expandedRows.has(customer.id)
                     return (
-                      <Collapsible
-                        key={customer.id}
-                        open={isExpanded}
-                        onOpenChange={() => toggleRow(customer.id)}
-                        asChild
-                      >
-                        <>
-                          <TableRow
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => toggleRow(customer.id)}
-                          >
+                      <Fragment key={customer.id}>
+                        <TableRow
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => toggleRow(customer.id)}
+                        >
                             <TableCell className="w-10">
                               {isExpanded ? (
                                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -567,9 +557,9 @@ export function CustomersPage() {
                               </div>
                             </TableCell>
                           </TableRow>
+                        {isExpanded && (
                           <TableRow>
                             <TableCell colSpan={10} className="p-0 border-0">
-                              <CollapsibleContent>
                                 <div className="bg-muted/30 px-6 py-4 border-b">
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                                     <div>
@@ -726,11 +716,10 @@ export function CustomersPage() {
                                       </p>
                                     )}
                                 </div>
-                              </CollapsibleContent>
                             </TableCell>
                           </TableRow>
-                        </>
-                      </Collapsible>
+                        )}
+                      </Fragment>
                     )
                   })}
                 </TableBody>
