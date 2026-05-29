@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  uid          String   @unique
+  email        String
+  displayName  String   @default("User")
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model InventoryItem {
+  id            String   @id @default(cuid())
+  brand         String
+  model         String
+  variant       String?
+  color         String?
+  ram           String?
+  storage       String?
+  imei1         String?
+  imei2         String?
+  purchasePrice Float    @default(0)
+  salePrice     Float    @default(0)
+  minSalePrice  Float?
+  supplier      String?
+  vendorId      String?
+  imageUrl      String?
+  purchaseDate  String
+  status        String   @default("Available")
+  type          String   @default("Mobile")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  vendor        Vendor?  @relation(fields: [vendorId], references: [id])
+  contracts     Contract[]
+  vendorContract VendorContract?
+}
+
+model Customer {
+  id              String   @id @default(cuid())
+  fullName        String
+  fatherName      String?
+  cnic            String   @default("")
+  phone           String   @default("")
+  altPhone        String?
+  address         String?
+  city            String?
+  occupation      String?
+  income          Float?
+  guarantorName   String?
+  guarantorPhone  String?
+  status          String   @default("Active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contracts       Contract[]
+  payments        Payment[]
+}
+
+model Contract {
+  id                    String   @id @default(cuid())
+  contractNumber        String   @unique
+  customerId            String
+  itemId                String
+  saleDate              String
+  purchasePrice         Float    @default(0)
+  totalPrice            Float    @default(0)
+  totalProfit           Float    @default(0)
+  downPayment           Float    @default(0)
+  remainingAmount       Float    @default(0)
+  installmentsCount     Int      @default(1)
+  installmentAmount     Float    @default(0)
+  profitPerInstallment  Float    @default(0)
+  principalPerInstallment Float  @default(0)
+  frequency             String   @default("Monthly")
+  nextDueDate           String?
+  totalPaid             Float    @default(0)
+  status                String   @default("Running")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  customer              Customer @relation(fields: [customerId], references: [id])
+  item                  InventoryItem @relation(fields: [itemId], references: [id])
+  payments              Payment[]
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  contractId      String
+  customerId      String
+  amount          Float    @default(0)
+  date            String
+  method          String   @default("Cash")
+  receivedBy      String   @default("System")
+  receiptNumber   String   @default("")
+  nextDueDateSet  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contract        Contract @relation(fields: [contractId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id])
+}
+
+model Vendor {
+  id              String   @id @default(cuid())
+  name            String
+  company         String   @default("")
+  phone           String   @default("")
+  address         String?
+  totalPurchases  Float    @default(0)
+  totalPaid       Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  inventoryItems  InventoryItem[]
+  vendorPayments  VendorPayment[]
+  vendorContracts VendorContract[]
+}
+
+model VendorPayment {
+  id              String   @id @default(cuid())
+  vendorId        String
+  amount          Float    @default(0)
+  date            String
+  method          String   @default("Cash")
+  receiptNumber   String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  vendor          Vendor   @relation(fields: [vendorId], references: [id])
+}
+
+model VendorContract {
+  id                  String   @id @default(cuid())
+  vendorId            String
+  itemId              String   @unique
+  purchaseDate        String
+  purchasePrice       Float    @default(0)
+  advancePaid         Float    @default(0)
+  installmentsCount   Int      @default(1)
+  installmentAmount   Float    @default(0)
+  remainingAmount     Float    @default(0)
+  totalPaid           Float    @default(0)
+  nextDueDate         String?
+  status              String   @default("Running")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  vendor              Vendor       @relation(fields: [vendorId], references: [id])
+  item                InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  installments        VendorInstallmentPayment[]
+}
+
+model VendorInstallmentPayment {
+  id                String   @id @default(cuid())
+  vendorContractId  String
+  vendorId          String
+  amount            Float    @default(0)
+  date              String
+  method            String   @default("Cash")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  vendorContract    VendorContract @relation(fields: [vendorContractId], references: [id])
+}
