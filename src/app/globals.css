@@ -120,3 +120,40 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Print styles for installment tracking form */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure dark mode colors don't print */
+  .print-area .dark\:bg-emerald-950\/30,
+  .print-area .dark\:text-emerald-300,
+  .print-area .dark\:text-emerald-200,
+  .print-area .dark\:text-emerald-400,
+  .print-area .dark\:border-emerald-800,
+  .print-area .dark\:border-emerald-900\/40,
+  .print-area .dark\:bg-emerald-950\/20 {
+    background: transparent !important;
+    color: inherit !important;
+    border-color: #a7f3d0 !important;
+  }
+}

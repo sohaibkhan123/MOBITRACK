@@ -7,6 +7,10 @@ import { CustomersPage } from '@/components/customers'
 import { VendorsPage } from '@/components/vendors'
 import { ContractsPage } from '@/components/contracts'
 import { PaymentsPage } from '@/components/payments'
+import { DueTrackingPage } from '@/components/due-tracking'
+import { VendorContractsPage } from '@/components/vendor-contracts'
+import { ContractDetail } from '@/components/contract-detail'
+import { CustomerDetail } from '@/components/customer-detail'
 import { useState } from 'react'
 import {
   LayoutDashboard,
@@ -19,6 +23,8 @@ import {
   X,
   Smartphone,
   ChevronRight,
+  Wallet,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -31,9 +37,28 @@ const navItems: { page: Page; label: string; icon: React.ReactNode }[] = [
   { page: 'vendors', label: 'Vendors', icon: <Store className="h-5 w-5" /> },
   { page: 'contracts', label: 'Contracts', icon: <FileText className="h-5 w-5" /> },
   { page: 'payments', label: 'Payments', icon: <CreditCard className="h-5 w-5" /> },
+  { page: 'vendor-contracts', label: 'Vendor Payables', icon: <Wallet className="h-5 w-5" /> },
+  { page: 'due-tracking', label: 'Due Tracking', icon: <AlertCircle className="h-5 w-5" /> },
 ]
 
 function PageContent({ page }: { page: Page }) {
+  const { selectedCustomerId, selectedContractId, setSelectedCustomerId, setCurrentPage, setSelectedContractId } = useAppStore()
+
+  const handleBackFromCustomerDetail = () => {
+    setSelectedCustomerId(null)
+    setCurrentPage('customers')
+  }
+
+  const handleViewContract = (contractId: string) => {
+    setSelectedContractId(contractId)
+    setCurrentPage('contract-detail')
+  }
+
+  const handleBackFromContractDetail = () => {
+    setSelectedContractId(null)
+    setCurrentPage('contracts')
+  }
+
   switch (page) {
     case 'dashboard':
       return <DashboardPage />
@@ -47,6 +72,29 @@ function PageContent({ page }: { page: Page }) {
       return <ContractsPage />
     case 'payments':
       return <PaymentsPage />
+    case 'vendor-contracts':
+      return <VendorContractsPage />
+    case 'due-tracking':
+      return <DueTrackingPage />
+    case 'customer-detail':
+      return selectedCustomerId ? (
+        <CustomerDetail
+          customerId={selectedCustomerId}
+          onBack={handleBackFromCustomerDetail}
+          onViewContract={handleViewContract}
+        />
+      ) : (
+        <CustomersPage />
+      )
+    case 'contract-detail':
+      return selectedContractId ? (
+        <ContractDetail
+          contractId={selectedContractId}
+          onBack={handleBackFromContractDetail}
+        />
+      ) : (
+        <ContractsPage />
+      )
     default:
       return <DashboardPage />
   }
@@ -57,7 +105,12 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  const currentPageLabel = navItems.find((item) => item.page === currentPage)?.label || 'Dashboard'
+  const displayPage = (currentPage === 'customer-detail' ? 'customers' : currentPage === 'contract-detail' ? 'contracts' : currentPage) as Page
+  const currentPageLabel = currentPage === 'customer-detail'
+    ? 'Customer Detail'
+    : currentPage === 'contract-detail'
+    ? 'Contract Detail'
+    : (navItems.find((item) => item.page === currentPage)?.label || 'Dashboard')
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -121,7 +174,7 @@ export default function Home() {
         {/* Navigation */}
         <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = currentPage === item.page
+            const isActive = displayPage === item.page
             return (
               <button
                 key={item.page}
@@ -175,7 +228,7 @@ export default function Home() {
 
           <div className="flex items-center gap-2">
             <div className="hidden lg:flex">
-              {navItems.find((item) => item.page === currentPage)?.icon}
+              {navItems.find((item) => item.page === displayPage)?.icon}
             </div>
             <h2 className="text-lg font-semibold text-foreground">{currentPageLabel}</h2>
           </div>

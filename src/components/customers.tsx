@@ -51,6 +51,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
+import { useAppStore } from '@/lib/store'
 import {
   Plus,
   Pencil,
@@ -64,6 +65,7 @@ import {
   MapPin,
   User,
   Wallet,
+  Eye,
 } from 'lucide-react'
 
 // Types
@@ -151,6 +153,7 @@ function formatPKR(amount: number | null | undefined): string {
 
 export function CustomersPage() {
   const { toast } = useToast()
+  const { setSelectedCustomerId, setCurrentPage } = useAppStore()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -533,8 +536,21 @@ export function CustomersPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleEdit(customer)}
+                                  onClick={() => {
+                                    setSelectedCustomerId(customer.id)
+                                    setCurrentPage('customer-detail')
+                                  }}
                                   className="h-8 w-8 p-0 text-muted-foreground hover:text-emerald-600"
+                                  title="View Details"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                  <span className="sr-only">View Details</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(customer)}
+                                  className="h-8 w-8 p-0 text-muted-foreground hover:text-amber-600"
                                 >
                                   <Pencil className="h-4 w-4" />
                                   <span className="sr-only">Edit</span>

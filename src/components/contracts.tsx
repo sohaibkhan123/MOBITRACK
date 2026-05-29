@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '@/hooks/use-toast'
+import { useAppStore } from '@/lib/store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -50,6 +51,7 @@ import {
   ChevronDown,
   ChevronRight,
   Loader2,
+  Eye,
 } from 'lucide-react'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -168,6 +170,12 @@ function getInitialFormData(contracts: Contract[]): ContractFormData {
 
 export function ContractsPage() {
   const { toast } = useToast()
+  const { setSelectedContractId, setCurrentPage } = useAppStore()
+
+  const handleViewContract = (contractId: string) => {
+    setSelectedContractId(contractId)
+    setCurrentPage('contract-detail')
+  }
 
   // Data state
   const [contracts, setContracts] = useState<Contract[]>([])
@@ -581,6 +589,15 @@ export function ContractsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="size-8 p-0 text-emerald-600 hover:text-emerald-700"
+                            onClick={() => handleViewContract(contract.id)}
+                            title="View Details"
+                          >
+                            <Eye className="size-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
