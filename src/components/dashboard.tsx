@@ -5,9 +5,6 @@ import { useAppStore } from '@/lib/store'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -27,6 +24,10 @@ import {
   CheckCircle2,
   Clock,
   ShoppingCart,
+  Plus,
+  Sparkles,
+  BarChart3,
+  LayoutDashboard,
 } from 'lucide-react'
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -91,18 +92,16 @@ function formatDate(dateStr: string): string {
 
 function NavCardSkeleton() {
   return (
-    <Card className="hover:shadow-lg transition-all duration-200">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-3 flex-1">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-3 w-32" />
-          </div>
-          <Skeleton className="h-12 w-12 rounded-xl" />
+    <div className="rounded-2xl border bg-card p-6">
+      <div className="flex items-start justify-between">
+        <div className="space-y-3 flex-1">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-3 w-32" />
         </div>
-      </CardContent>
-    </Card>
+        <Skeleton className="h-14 w-14 rounded-2xl" />
+      </div>
+    </div>
   )
 }
 
@@ -136,15 +135,16 @@ export function DashboardPage() {
     ? [
         {
           title: 'Installments',
-          description: 'Track installment schedules & payments',
+          description: 'Track schedules & payments',
           icon: CalendarClock,
           mainValue: data.activeContracts.toString(),
           subLabel: `${data.activeContracts} active contracts`,
           badge: data.overdueContracts > 0
             ? { label: `${data.overdueContracts} overdue`, variant: 'destructive' as const }
             : null,
-          iconBg: 'bg-emerald-100 dark:bg-emerald-950',
-          iconColor: 'text-emerald-600 dark:text-emerald-400',
+          gradient: 'from-orange-500 to-amber-500',
+          lightBg: 'bg-orange-50 dark:bg-orange-950/30',
+          iconBg: 'bg-gradient-to-br from-orange-500 to-amber-500',
           page: 'installments' as const,
           onClick: () => setCurrentPage('installments'),
         },
@@ -155,8 +155,9 @@ export function DashboardPage() {
           mainValue: data.availableInventory.toString(),
           subLabel: `${data.availableInventory} available · ${data.soldInventory} sold`,
           badge: null,
-          iconBg: 'bg-teal-100 dark:bg-teal-950',
-          iconColor: 'text-teal-600 dark:text-teal-400',
+          gradient: 'from-teal-500 to-cyan-500',
+          lightBg: 'bg-teal-50 dark:bg-teal-950/30',
+          iconBg: 'bg-gradient-to-br from-teal-500 to-cyan-500',
           page: 'inventory' as const,
           onClick: () => setCurrentPage('inventory'),
         },
@@ -167,22 +168,24 @@ export function DashboardPage() {
           mainValue: data.totalCustomers.toString(),
           subLabel: `${data.activeCustomers} active customers`,
           badge: null,
-          iconBg: 'bg-amber-100 dark:bg-amber-950',
-          iconColor: 'text-amber-600 dark:text-amber-400',
+          gradient: 'from-rose-500 to-pink-500',
+          lightBg: 'bg-rose-50 dark:bg-rose-950/30',
+          iconBg: 'bg-gradient-to-br from-rose-500 to-pink-500',
           page: 'customers' as const,
           onClick: () => setCurrentPage('customers'),
         },
         {
           title: 'Contracts',
-          description: 'Manage installment contracts',
+          description: 'Installment contracts',
           icon: FileText,
           mainValue: data.totalContracts.toString(),
           subLabel: `${data.completedContracts} completed`,
           badge: data.overdueContracts > 0
             ? { label: `${data.overdueContracts} overdue`, variant: 'destructive' as const }
             : null,
-          iconBg: 'bg-rose-100 dark:bg-rose-950',
-          iconColor: 'text-rose-600 dark:text-rose-400',
+          gradient: 'from-violet-500 to-purple-500',
+          lightBg: 'bg-violet-50 dark:bg-violet-950/30',
+          iconBg: 'bg-gradient-to-br from-violet-500 to-purple-500',
           page: 'contracts' as const,
           onClick: () => setCurrentPage('contracts'),
         },
@@ -193,20 +196,22 @@ export function DashboardPage() {
           mainValue: formatPKR(data.collectedThisMonth),
           subLabel: 'Collected this month',
           badge: null,
-          iconBg: 'bg-emerald-100 dark:bg-emerald-950',
-          iconColor: 'text-emerald-600 dark:text-emerald-400',
+          gradient: 'from-emerald-500 to-green-500',
+          lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+          iconBg: 'bg-gradient-to-br from-emerald-500 to-green-500',
           page: 'payments' as const,
           onClick: () => setCurrentPage('payments'),
         },
         {
           title: 'Vendors',
-          description: 'Vendor management & payables',
+          description: 'Vendor management',
           icon: Store,
           mainValue: data.totalVendors.toString(),
           subLabel: 'Registered vendors',
           badge: null,
-          iconBg: 'bg-amber-100 dark:bg-amber-950',
-          iconColor: 'text-amber-600 dark:text-amber-400',
+          gradient: 'from-sky-500 to-blue-500',
+          lightBg: 'bg-sky-50 dark:bg-sky-950/30',
+          iconBg: 'bg-gradient-to-br from-sky-500 to-blue-500',
           page: 'vendors' as const,
           onClick: () => setCurrentPage('vendors'),
         },
@@ -217,8 +222,9 @@ export function DashboardPage() {
           mainValue: '₨',
           subLabel: 'Vendor purchase installments',
           badge: null,
-          iconBg: 'bg-purple-100 dark:bg-purple-950',
-          iconColor: 'text-purple-600 dark:text-purple-400',
+          gradient: 'from-fuchsia-500 to-pink-500',
+          lightBg: 'bg-fuchsia-50 dark:bg-fuchsia-950/30',
+          iconBg: 'bg-gradient-to-br from-fuchsia-500 to-pink-500',
           page: 'vendor-contracts' as const,
           onClick: () => setCurrentPage('vendor-contracts'),
         },
@@ -231,12 +237,15 @@ export function DashboardPage() {
           badge: data.overdueContracts > 0
             ? { label: 'Action needed', variant: 'destructive' as const }
             : null,
+          gradient: data.overdueContracts > 0
+            ? 'from-red-500 to-rose-500'
+            : 'from-emerald-500 to-green-500',
+          lightBg: data.overdueContracts > 0
+            ? 'bg-red-50 dark:bg-red-950/30'
+            : 'bg-emerald-50 dark:bg-emerald-950/30',
           iconBg: data.overdueContracts > 0
-            ? 'bg-red-100 dark:bg-red-950'
-            : 'bg-emerald-100 dark:bg-emerald-950',
-          iconColor: data.overdueContracts > 0
-            ? 'text-red-600 dark:text-red-400'
-            : 'text-emerald-600 dark:text-emerald-400',
+            ? 'bg-gradient-to-br from-red-500 to-rose-500'
+            : 'bg-gradient-to-br from-emerald-500 to-green-500',
           page: 'due-tracking' as const,
           onClick: () => setCurrentPage('due-tracking'),
         },
@@ -246,72 +255,91 @@ export function DashboardPage() {
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white">
-              <Smartphone className="h-5 w-5" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Hero Header */}
+        <div className="pt-8 pb-6 sm:pt-12 sm:pb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/25">
+              <Smartphone className="h-8 w-8 text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <div className="flex-1">
+              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
                 MobiTrack
               </h1>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-base mt-1">
                 Mobile Shop Installment Management System
               </p>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              <span>Admin Dashboard</span>
             </div>
           </div>
         </div>
 
         {/* Quick Stats Bar */}
         {!loading && data && (
-          <div className="mb-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="flex items-center gap-3 rounded-xl border bg-card p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950">
-                <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Outstanding</p>
-                <p className="text-sm font-bold">{formatPKR(data.totalOutstanding)}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border bg-card p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950">
-                <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">This Month</p>
-                <p className="text-sm font-bold">{formatPKR(data.collectedThisMonth)}</p>
+          <div className="mb-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="relative overflow-hidden rounded-2xl border bg-card p-4 shadow-sm">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-orange-500/10 to-transparent rounded-bl-full" />
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-sm">
+                  <DollarSign className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Outstanding</p>
+                  <p className="text-lg font-bold">{formatPKR(data.totalOutstanding)}</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-xl border bg-card p-4">
-              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${data.overdueContracts > 0 ? 'bg-red-100 dark:bg-red-950' : 'bg-emerald-100 dark:bg-emerald-950'}`}>
-                <AlertTriangle className={`h-4 w-4 ${data.overdueContracts > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Overdue</p>
-                <p className={`text-sm font-bold ${data.overdueContracts > 0 ? 'text-red-600 dark:text-red-400' : ''}`}>
-                  {data.overdueContracts} contract{data.overdueContracts !== 1 ? 's' : ''}
-                </p>
+            <div className="relative overflow-hidden rounded-2xl border bg-card p-4 shadow-sm">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-bl-full" />
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 shadow-sm">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">This Month</p>
+                  <p className="text-lg font-bold">{formatPKR(data.collectedThisMonth)}</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-xl border bg-card p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-950">
-                <Package className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+            <div className="relative overflow-hidden rounded-2xl border bg-card p-4 shadow-sm">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-red-500/10 to-transparent rounded-bl-full" />
+              <div className="flex items-center gap-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-sm ${data.overdueContracts > 0 ? 'bg-gradient-to-br from-red-500 to-rose-500' : 'bg-gradient-to-br from-emerald-500 to-green-500'}`}>
+                  <AlertTriangle className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Overdue</p>
+                  <p className={`text-lg font-bold ${data.overdueContracts > 0 ? 'text-red-600 dark:text-red-400' : ''}`}>
+                    {data.overdueContracts} contract{data.overdueContracts !== 1 ? 's' : ''}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">In Stock</p>
-                <p className="text-sm font-bold">{data.availableInventory} items</p>
+            </div>
+            <div className="relative overflow-hidden rounded-2xl border bg-card p-4 shadow-sm">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-teal-500/10 to-transparent rounded-bl-full" />
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 shadow-sm">
+                  <Package className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">In Stock</p>
+                  <p className="text-lg font-bold">{data.availableInventory} items</p>
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {/* Section Title */}
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Quick Navigation</h2>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <LayoutDashboard className="h-5 w-5 text-orange-500" />
+            <h2 className="text-xl font-bold text-foreground">Quick Navigation</h2>
+          </div>
           <p className="text-sm text-muted-foreground">Click on any section to manage</p>
         </div>
 
@@ -322,198 +350,209 @@ export function DashboardPage() {
             : navCards.map((card) => {
                 const Icon = card.icon
                 return (
-                  <Card
+                  <div
                     key={card.title}
-                    className="group cursor-pointer hover:shadow-lg hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-200"
+                    className="group relative cursor-pointer rounded-2xl border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:border-transparent active:scale-[0.98]"
                     onClick={card.onClick}
                   >
-                    <CardContent className="p-6">
+                    {/* Hover gradient overlay */}
+                    <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                    
+                    {/* Content */}
+                    <div className="relative z-10">
                       <div className="flex items-start justify-between">
                         <div className="space-y-2 flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-foreground">{card.title}</h3>
+                            <h3 className="font-bold text-foreground group-hover:text-white transition-colors duration-300">{card.title}</h3>
                             {card.badge && (
-                              <Badge variant={card.badge.variant} className="text-[10px] px-1.5 py-0">
+                              <Badge variant={card.badge.variant} className="text-[10px] px-1.5 py-0 group-hover:bg-white/20 group-hover:text-white group-hover:border-white/30 transition-colors duration-300">
                                 {card.badge.label}
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xl font-bold text-foreground">{card.mainValue}</p>
-                          <p className="text-xs text-muted-foreground truncate">{card.subLabel}</p>
+                          <p className="text-2xl font-extrabold text-foreground group-hover:text-white transition-colors duration-300">{card.mainValue}</p>
+                          <p className="text-xs text-muted-foreground group-hover:text-white/80 truncate transition-colors duration-300">{card.subLabel}</p>
                         </div>
-                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.iconBg} group-hover:scale-110 transition-transform duration-200`}>
-                          <Icon className={`h-6 w-6 ${card.iconColor}`} />
+                        <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${card.iconBg} shadow-lg group-hover:bg-white/20 transition-all duration-300`}>
+                          <Icon className="h-7 w-7 text-white" />
                         </div>
                       </div>
-                      <div className="mt-3 flex items-center text-xs text-emerald-600 dark:text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        Open section <ArrowRight className="ml-1 h-3 w-3" />
+                      <div className="mt-4 flex items-center text-xs font-semibold text-muted-foreground group-hover:text-white/90 transition-all duration-300">
+                        <span>Open section</span>
+                        <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1 duration-300" />
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )
               })}
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card
-              className="group cursor-pointer hover:shadow-lg hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-200 border-dashed"
+        <div className="mt-10">
+          <div className="flex items-center gap-2 mb-5">
+            <BarChart3 className="h-5 w-5 text-amber-500" />
+            <h2 className="text-xl font-bold text-foreground">Quick Actions</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div
+              className="group relative cursor-pointer rounded-2xl border-2 border-dashed border-orange-300 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 p-5 transition-all duration-300 hover:shadow-lg hover:border-orange-400 hover:bg-orange-50 dark:hover:border-orange-700"
               onClick={() => {
                 setOpenAddContractOnNavigate(true)
                 setCurrentPage('contracts')
               }}
             >
-              <CardContent className="p-5 flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950">
-                  <ShoppingCart className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-md">
+                  <ShoppingCart className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm">New Installment Sale</h3>
-                  <p className="text-xs text-muted-foreground">Create a new contract with auto-invoice</p>
+                  <h3 className="font-bold text-sm">New Installment Sale</h3>
+                  <p className="text-xs text-muted-foreground">Create contract with auto-invoice</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-emerald-600 transition-colors" />
-              </CardContent>
-            </Card>
+                <Plus className="h-5 w-5 text-orange-400 group-hover:text-orange-600 transition-colors" />
+              </div>
+            </div>
 
-            <Card
-              className="group cursor-pointer hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-700 transition-all duration-200 border-dashed"
+            <div
+              className="group relative cursor-pointer rounded-2xl border-2 border-dashed border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 p-5 transition-all duration-300 hover:shadow-lg hover:border-red-400 hover:bg-red-50 dark:hover:border-red-700"
               onClick={() => setCurrentPage('due-tracking')}
             >
-              <CardContent className="p-5 flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 dark:bg-red-950">
-                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-500 shadow-md">
+                  <AlertTriangle className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm">Check Overdue</h3>
-                  <p className="text-xs text-muted-foreground">View and follow up on overdue payments</p>
+                  <h3 className="font-bold text-sm">Check Overdue</h3>
+                  <p className="text-xs text-muted-foreground">Follow up on overdue payments</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-amber-600 transition-colors" />
-              </CardContent>
-            </Card>
+                <ArrowRight className="h-5 w-5 text-red-400 group-hover:text-red-600 transition-colors" />
+              </div>
+            </div>
 
-            <Card
-              className="group cursor-pointer hover:shadow-lg hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-200 border-dashed"
+            <div
+              className="group relative cursor-pointer rounded-2xl border-2 border-dashed border-teal-300 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/20 p-5 transition-all duration-300 hover:shadow-lg hover:border-teal-400 hover:bg-teal-50 dark:hover:border-teal-700"
               onClick={() => setCurrentPage('inventory')}
             >
-              <CardContent className="p-5 flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-950">
-                  <Package className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 shadow-md">
+                  <Package className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm">Add Inventory</h3>
+                  <h3 className="font-bold text-sm">Add Inventory</h3>
                   <p className="text-xs text-muted-foreground">Add new mobile phones to stock</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-teal-600 transition-colors" />
-              </CardContent>
-            </Card>
+                <Plus className="h-5 w-5 text-teal-400 group-hover:text-teal-600 transition-colors" />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Upcoming Due Payments */}
         {!loading && data && data.upcomingPayments.length > 0 && (
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">Upcoming Due Payments</h2>
+          <div className="mt-10">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-amber-500" />
+                <h2 className="text-xl font-bold text-foreground">Upcoming Due Payments</h2>
+              </div>
               <button
                 onClick={() => setCurrentPage('due-tracking')}
-                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+                className="text-sm text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 transition-colors"
               >
                 View all <ArrowRight className="h-3 w-3" />
               </button>
             </div>
-            <Card>
-              <CardContent className="p-0">
-                <div className="divide-y">
-                  {data.upcomingPayments.slice(0, 5).map((p) => {
-                    const isOverdue = new Date(p.nextDueDate + 'T00:00:00') < new Date()
-                    return (
-                      <div key={p.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isOverdue ? 'bg-red-100 dark:bg-red-950' : 'bg-amber-100 dark:bg-amber-950'}`}>
-                            {isOverdue ? (
-                              <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                            ) : (
-                              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{p.customer.fullName}</p>
-                            <p className="text-xs text-muted-foreground">{p.item.brand} {p.item.model}</p>
-                          </div>
+            <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+              <div className="divide-y">
+                {data.upcomingPayments.slice(0, 5).map((p) => {
+                  const isOverdue = new Date(p.nextDueDate + 'T00:00:00') < new Date()
+                  return (
+                    <div key={p.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isOverdue ? 'bg-gradient-to-br from-red-500 to-rose-500' : 'bg-gradient-to-br from-amber-400 to-orange-500'} shadow-sm`}>
+                          {isOverdue ? (
+                            <AlertTriangle className="h-5 w-5 text-white" />
+                          ) : (
+                            <Clock className="h-5 w-5 text-white" />
+                          )}
                         </div>
-                        <div className="text-right shrink-0 ml-4">
-                          <p className="text-sm font-semibold">{formatPKR(p.installmentAmount)}</p>
-                          <div className="flex items-center gap-1 justify-end">
-                            <CalendarClock className="h-3 w-3 text-muted-foreground" />
-                            <p className={`text-xs ${isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : 'text-muted-foreground'}`}>
-                              {formatDate(p.nextDueDate)}
-                            </p>
-                          </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">{p.customer.fullName}</p>
+                          <p className="text-xs text-muted-foreground">{p.item.brand} {p.item.model}</p>
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                      <div className="text-right shrink-0 ml-4">
+                        <p className="text-sm font-bold">{formatPKR(p.installmentAmount)}</p>
+                        <div className="flex items-center gap-1 justify-end">
+                          <CalendarClock className="h-3 w-3 text-muted-foreground" />
+                          <p className={`text-xs ${isOverdue ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-muted-foreground'}`}>
+                            {formatDate(p.nextDueDate)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Recent Payments */}
         {!loading && data && data.recentPayments.length > 0 && (
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">Recent Payments</h2>
+          <div className="mt-10">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                <h2 className="text-xl font-bold text-foreground">Recent Payments</h2>
+              </div>
               <button
                 onClick={() => setCurrentPage('payments')}
-                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+                className="text-sm text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 transition-colors"
               >
                 View all <ArrowRight className="h-3 w-3" />
               </button>
             </div>
-            <Card>
-              <CardContent className="p-0">
-                <div className="divide-y">
-                  {data.recentPayments.slice(0, 5).map((p) => (
-                    <div key={p.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{p.customer.fullName}</p>
-                          <p className="text-xs text-muted-foreground">{p.contract.item.brand} {p.contract.item.model}</p>
-                        </div>
+            <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+              <div className="divide-y">
+                {data.recentPayments.slice(0, 5).map((p) => (
+                  <div key={p.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 shadow-sm">
+                        <CheckCircle2 className="h-5 w-5 text-white" />
                       </div>
-                      <div className="text-right shrink-0 ml-4">
-                        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                          +{formatPKR(p.amount)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{formatDate(p.date)}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate">{p.customer.fullName}</p>
+                        <p className="text-xs text-muted-foreground">{p.contract.item.brand} {p.contract.item.model}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    <div className="text-right shrink-0 ml-4">
+                      <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        +{formatPKR(p.amount)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{formatDate(p.date)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Error state */}
         {error && !loading && (
-          <Card className="mt-6 border-rose-300 dark:border-rose-800">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
-                <AlertTriangle className="h-5 w-5 shrink-0" />
-                <p className="text-sm">
-                  Failed to load dashboard data: {error}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mt-6 rounded-2xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-5">
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <p className="text-sm">
+                Failed to load dashboard data: {error}
+              </p>
+            </div>
+          </div>
         )}
+
+        {/* Bottom padding */}
+        <div className="h-8" />
       </div>
     </div>
   )

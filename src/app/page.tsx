@@ -14,7 +14,6 @@ import { CustomerDetail } from '@/components/customer-detail'
 import { InstallmentsPage } from '@/components/installments'
 import { useState } from 'react'
 import {
-  LayoutDashboard,
   Package,
   Users,
   Store,
@@ -25,20 +24,21 @@ import {
   Smartphone,
   ChevronRight,
   Wallet,
-  AlertCircle,
   CalendarClock,
+  Home as HomeIcon,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 const navItems: { page: Page; label: string; icon: React.ReactNode }[] = [
-  { page: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
+  { page: 'dashboard', label: 'Home', icon: <HomeIcon className="h-5 w-5" /> },
+  { page: 'installments', label: 'Installments', icon: <CalendarClock className="h-5 w-5" /> },
   { page: 'inventory', label: 'Inventory', icon: <Package className="h-5 w-5" /> },
   { page: 'customers', label: 'Customers', icon: <Users className="h-5 w-5" /> },
   { page: 'vendors', label: 'Vendors', icon: <Store className="h-5 w-5" /> },
   { page: 'contracts', label: 'Contracts', icon: <FileText className="h-5 w-5" /> },
-  { page: 'installments', label: 'Installments', icon: <CalendarClock className="h-5 w-5" /> },
   { page: 'payments', label: 'Payments', icon: <CreditCard className="h-5 w-5" /> },
   { page: 'vendor-contracts', label: 'Vendor Payables', icon: <Wallet className="h-5 w-5" /> },
   { page: 'due-tracking', label: 'Due Tracking', icon: <AlertCircle className="h-5 w-5" /> },
@@ -110,13 +110,30 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
+  const isDashboard = currentPage === 'dashboard'
+
   const displayPage = (currentPage === 'customer-detail' ? 'customers' : currentPage === 'contract-detail' ? 'contracts' : currentPage) as Page
   const currentPageLabel = currentPage === 'customer-detail'
     ? 'Customer Detail'
     : currentPage === 'contract-detail'
     ? 'Contract Detail'
-    : (navItems.find((item) => item.page === currentPage)?.label || 'Dashboard')
+    : (navItems.find((item) => item.page === currentPage)?.label || 'Home')
 
+  // Dashboard is a completely separate full-screen page
+  if (isDashboard) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <DashboardPage />
+        <footer className="border-t bg-card py-3 px-4 text-center">
+          <p className="text-xs text-muted-foreground">
+            © 2026 MobiTrack — Mobile Shop Installment Management System
+          </p>
+        </footer>
+      </div>
+    )
+  }
+
+  // Section pages have sidebar navigation
   return (
     <div className="min-h-screen flex bg-background">
       {/* Mobile overlay */}
@@ -138,20 +155,26 @@ export default function Home() {
         {/* Sidebar Header */}
         <div className="flex h-16 items-center justify-between border-b border-border px-4">
           {!sidebarCollapsed && (
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white">
+            <button
+              onClick={() => setCurrentPage('dashboard')}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm">
                 <Smartphone className="h-4 w-4" />
               </div>
               <div>
                 <h1 className="text-sm font-bold text-foreground">MobiTrack</h1>
                 <p className="text-[10px] text-muted-foreground">Installment Manager</p>
               </div>
-            </div>
+            </button>
           )}
           {sidebarCollapsed && (
-            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white">
+            <button
+              onClick={() => setCurrentPage('dashboard')}
+              className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm hover:opacity-80 transition-opacity"
+            >
               <Smartphone className="h-4 w-4" />
-            </div>
+            </button>
           )}
           <Button
             variant="ghost"
@@ -188,10 +211,11 @@ export default function Home() {
                   setSidebarOpen(false)
                 }}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                  'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                  isActive && item.page !== 'dashboard'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20'
                     : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                  item.page === 'dashboard' && 'text-muted-foreground hover:bg-accent hover:text-foreground',
                   sidebarCollapsed && 'justify-center px-2'
                 )}
                 title={sidebarCollapsed ? item.label : undefined}
@@ -206,11 +230,11 @@ export default function Home() {
         {/* Sidebar Footer */}
         {!sidebarCollapsed && (
           <div className="border-t border-border p-4">
-            <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/30 p-3">
-              <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+            <div className="rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 p-3">
+              <p className="text-xs font-semibold text-orange-800 dark:text-orange-300">
                 MobiTrack Pro
               </p>
-              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">
+              <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-0.5">
                 Mobile Shop Installment System
               </p>
             </div>
@@ -239,6 +263,15 @@ export default function Home() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentPage('dashboard')}
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <HomeIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">Home</span>
+            </Button>
             <ThemeToggle />
           </div>
         </header>
