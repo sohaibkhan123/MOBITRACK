@@ -91,6 +91,7 @@ Stage Summary:
 - Clicking the button navigates to the contracts page and automatically opens the Add Contract dialog
 - Cross-page navigation signal implemented via Zustand store (openAddContractOnNavigate flag)
 - No other existing code was modified
+
 ---
 Task ID: 1
 Agent: Main
@@ -113,3 +114,29 @@ Stage Summary:
 - Fixed: Inventory add dialog pre-fills today's date
 - Fixed: Cross-page navigation from Installments → Contracts with auto-open add dialog
 - No React Fragment or data-state errors exist in current code
+
+---
+Task ID: 4
+Agent: Main
+Task: Fix contract form not submitting - duplicate contract number and timing issues
+
+Work Log:
+- Found root cause in dev log: Prisma unique constraint violation on contractNumber field
+- When navigating from Installments page, contract number was generated before contracts were loaded
+- This resulted in duplicate contract numbers (e.g., MT-2026-1001 already existed)
+- Fixed contracts.tsx: openAddContractOnNavigate useEffect now waits for !loading before opening dialog
+- Fixed contracts.tsx: handleSubmit now reads API error responses and shows meaningful messages
+- Fixed contracts.tsx: Added auto-retry with regenerated contract number if duplicate detected
+- Fixed contracts API (route.ts): Auto-generates unique contract number if provided one is duplicate
+- Fixed contracts API (route.ts): No longer requires contractNumber (auto-generates if missing)
+- Added navigatedFromInstallments state to redirect back to installments page after successful contract creation
+- Tested API: contract creation with duplicate number now auto-generates unique number instead of failing
+- Verified lint passes and dev server compiles successfully
+
+Stage Summary:
+- Root cause: Contract number was generated with empty contracts state, causing unique constraint violation
+- Fix 1 (frontend): Wait for contracts to load before opening add dialog from installments navigation
+- Fix 2 (frontend): Auto-retry with new contract number on duplicate, show meaningful error messages
+- Fix 3 (backend API): Auto-generate unique contract number when duplicate detected
+- Fix 4 (UX): Auto-redirect to installments page after creating contract from installments flow
+- All changes compile and pass lint check

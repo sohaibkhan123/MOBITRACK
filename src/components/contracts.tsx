@@ -191,6 +191,9 @@ export function ContractsPage() {
   const { toast } = useToast()
   const { setSelectedContractId, setCurrentPage, openAddContractOnNavigate, setOpenAddContractOnNavigate } = useAppStore()
 
+  // Track if navigated from installments page for auto-redirect after contract creation
+  const [navigatedFromInstallments, setNavigatedFromInstallments] = useState(false)
+
   const handleViewContract = (contractId: string) => {
     setSelectedContractId(contractId)
     setCurrentPage('contract-detail')
@@ -284,12 +287,14 @@ export function ContractsPage() {
   }, [dialogOpen, fetchAvailableItems])
 
   // Handle navigate-from-installments: open Add Contract dialog automatically
+  // Wait for loading to complete so contracts are available for number generation
   useEffect(() => {
-    if (openAddContractOnNavigate) {
+    if (openAddContractOnNavigate && !loading) {
+      setNavigatedFromInstallments(true)
       openAddDialog()
       setOpenAddContractOnNavigate(false)
     }
-  }, [openAddContractOnNavigate, setOpenAddContractOnNavigate])
+  }, [openAddContractOnNavigate, setOpenAddContractOnNavigate, loading])
 
   // ─── Auto-calculation ───────────────────────────────────────────────────
 
@@ -406,7 +411,10 @@ export function ContractsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         })
-        if (!res.ok) throw new Error('Failed to update contract')
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          throw new Error(errData.error || 'Failed to update contract')
+        }
         toast({ title: 'Success', description: 'Contract updated successfully' })
       } else {
         const res = await fetch('/api/contracts', {
@@ -414,16 +422,41 @@ export function ContractsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         })
-        if (!res.ok) throw new Error('Failed to create contract')
-        toast({ title: 'Success', description: 'Contract created successfully' })
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          // If duplicate contract number, auto-regenerate and retry
+          if (errData.error?.includes('contract number') || errData.error?.includes('Contract number')) {
+            const newNumber = generateContractNumber(contracts)
+            payload.contractNumber = newNumber
+            const retryRes = await fetch('/api/contracts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            })
+            if (!retryRes.ok) {
+              const retryErrData = await retryRes.json().catch(() => ({}))
+              throw new Error(retryErrData.error || 'Failed to create contract')
+            }
+            toast({ title: 'Success', description: `Contract ${newNumber} created successfully` })
+          } else {
+            throw new Error(errData.error || 'Failed to create contract')
+          }
+        } else {
+          toast({ title: 'Success', description: 'Contract created successfully' })
+        }
       }
 
       setDialogOpen(false)
       fetchContracts()
-    } catch {
+      // If navigated from installments, redirect back after successful creation
+      if (navigatedFromInstallments && !editingContract) {
+        setNavigatedFromInstallments(false)
+        setCurrentPage('installments')
+      }
+    } catch (err) {
       toast({
         title: 'Error',
-        description: editingContract ? 'Failed to update contract' : 'Failed to create contract',
+        description: err instanceof Error ? err.message : (editingContract ? 'Failed to update contract' : 'Failed to create contract'),
         variant: 'destructive',
       })
     } finally {

@@ -23,7 +23,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const {
+    let {
       contractNumber,
       customerId,
       itemId,
@@ -43,11 +43,46 @@ export async function POST(request: Request) {
       status,
     } = body
 
-    if (!contractNumber || !customerId || !itemId || !saleDate) {
+    if (!customerId || !itemId || !saleDate) {
       return NextResponse.json(
-        { error: 'Contract number, customer, item, and sale date are required' },
+        { error: 'Customer, item, and sale date are required' },
         { status: 400 }
       )
+    }
+
+    // Auto-generate contract number if not provided or if it already exists
+    if (!contractNumber) {
+      const year = new Date().getFullYear()
+      const existingContracts = await db.contract.findMany({
+        select: { contractNumber: true },
+      })
+      const existingNumbers = existingContracts
+        .map((c) => {
+          const match = c.contractNumber.match(/MT-\d{4}-(\d+)/)
+          return match ? parseInt(match[1], 10) : 0
+        })
+        .filter((n) => n > 0)
+      const nextNum = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1001
+      contractNumber = `MT-${year}-${nextNum}`
+    } else {
+      // Check if contract number already exists, auto-generate if duplicate
+      const existing = await db.contract.findUnique({
+        where: { contractNumber },
+      })
+      if (existing) {
+        const year = new Date().getFullYear()
+        const existingContracts = await db.contract.findMany({
+          select: { contractNumber: true },
+        })
+        const existingNumbers = existingContracts
+          .map((c) => {
+            const match = c.contractNumber.match(/MT-\d{4}-(\d+)/)
+            return match ? parseInt(match[1], 10) : 0
+          })
+          .filter((n) => n > 0)
+        const nextNum = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1001
+        contractNumber = `MT-${year}-${nextNum}`
+      }
     }
 
     const contract = await db.contract.create({
