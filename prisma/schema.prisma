@@ -3,10 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+// 👇 Your models remain exactly the same (no changes needed)
 model User {
   id           String   @id @default(cuid())
   uid          String   @unique
