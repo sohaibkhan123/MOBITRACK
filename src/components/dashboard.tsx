@@ -14,6 +14,7 @@ import {
   DollarSign,
   Package,
   TrendingUp,
+  Monitor,
   Store,
   CreditCard,
   AlertTriangle,
@@ -299,6 +300,12 @@ export function DashboardPage() {
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-amber-500" />
                 <span>Admin Dashboard</span>
+                {typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).electronAPI && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-400 dark:border-orange-800">
+                    <Monitor className="h-3 w-3 mr-1" />
+                    Desktop
+                  </Badge>
+                )}
               </div>
               {settings?.currencyCode && (
                 <Badge variant="outline" className="text-xs">
