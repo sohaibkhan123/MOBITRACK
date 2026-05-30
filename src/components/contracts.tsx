@@ -291,10 +291,16 @@ export function ContractsPage() {
   useEffect(() => {
     if (openAddContractOnNavigate && !loading) {
       setNavigatedFromInstallments(true)
-      openAddDialog()
-      setOpenAddContractOnNavigate(false)
+      setEditingContract(null)
+      setFormData(getInitialFormData(contracts))
+      setNextDueDateManual(false)
+      setDialogOpen(true)
+      // Use a small timeout to ensure state is set before clearing the flag
+      setTimeout(() => {
+        setOpenAddContractOnNavigate(false)
+      }, 100)
     }
-  }, [openAddContractOnNavigate, setOpenAddContractOnNavigate, loading])
+  }, [openAddContractOnNavigate, loading, contracts, setOpenAddContractOnNavigate])
 
   // ─── Auto-calculation ───────────────────────────────────────────────────
 
@@ -447,7 +453,7 @@ export function ContractsPage() {
       }
 
       setDialogOpen(false)
-      fetchContracts()
+      await fetchContracts()
       // If navigated from installments, redirect back after successful creation
       if (navigatedFromInstallments && !editingContract) {
         setNavigatedFromInstallments(false)
