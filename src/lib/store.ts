@@ -9,6 +9,8 @@ interface AppState {
   setSelectedCustomerId: (id: string | null) => void
   selectedContractId: string | null
   setSelectedContractId: (id: string | null) => void
+  openAddContractOnNavigate: boolean
+  setOpenAddContractOnNavigate: (open: boolean) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -18,4 +20,6 @@ export const useAppStore = create<AppState>((set) => ({
   setSelectedCustomerId: (id) => set({ selectedCustomerId: id }),
   selectedContractId: null,
   setSelectedContractId: (id) => set({ selectedContractId: id }),
+  openAddContractOnNavigate: false,
+  setOpenAddContractOnNavigate: (open) => set({ openAddContractOnNavigate: open }),
 }))

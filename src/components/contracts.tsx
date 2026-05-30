@@ -189,7 +189,7 @@ function getInitialFormData(contracts: Contract[]): ContractFormData {
 
 export function ContractsPage() {
   const { toast } = useToast()
-  const { setSelectedContractId, setCurrentPage } = useAppStore()
+  const { setSelectedContractId, setCurrentPage, openAddContractOnNavigate, setOpenAddContractOnNavigate } = useAppStore()
 
   const handleViewContract = (contractId: string) => {
     setSelectedContractId(contractId)
@@ -282,6 +282,14 @@ export function ContractsPage() {
       fetchAvailableItems()
     }
   }, [dialogOpen, fetchAvailableItems])
+
+  // Handle navigate-from-installments: open Add Contract dialog automatically
+  useEffect(() => {
+    if (openAddContractOnNavigate) {
+      openAddDialog()
+      setOpenAddContractOnNavigate(false)
+    }
+  }, [openAddContractOnNavigate, setOpenAddContractOnNavigate])
 
   // ─── Auto-calculation ───────────────────────────────────────────────────
 
@@ -388,7 +396,7 @@ export function ContractsPage() {
         principalPerInstallment: derived.principalPerInstallment,
         frequency: formData.frequency,
         nextDueDate: formData.nextDueDate || null,
-        totalPaid: editingContract ? editingContract.totalPaid : 0,
+        totalPaid: editingContract ? editingContract.totalPaid : formData.downPayment,
         status: formData.status,
       }
 
@@ -517,7 +525,7 @@ export function ContractsPage() {
         </div>
         <Button onClick={openAddDialog} className="w-fit">
           <Plus className="size-4 mr-2" />
-          Add Contract
+          New Installment Sale
         </Button>
       </div>
 

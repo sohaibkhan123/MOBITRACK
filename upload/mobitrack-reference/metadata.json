@@ -1,0 +1,6 @@
+{
+  "name": "Hafiz Mobiles",
+  "description": "A professional management system for mobile shops to track inventory, cash sales, and installment plans with automated payment tracking and reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

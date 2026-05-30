@@ -46,6 +46,7 @@ import {
   CheckCircle2,
   Clock,
   X,
+  Plus,
 } from 'lucide-react'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -192,7 +193,7 @@ const METHOD_OPTIONS = ['Cash', 'EasyPaisa', 'Bank Transfer', 'JazzCash'] as con
 
 export function InstallmentsPage() {
   const { toast } = useToast()
-  const { setSelectedContractId, setCurrentPage } = useAppStore()
+  const { setSelectedContractId, setCurrentPage, setOpenAddContractOnNavigate } = useAppStore()
 
   // Data state
   const [contracts, setContracts] = useState<Contract[]>([])
@@ -508,6 +509,16 @@ export function InstallmentsPage() {
             Track all installment schedules and payment statuses
           </p>
         </div>
+        <Button
+          className="w-fit"
+          onClick={() => {
+            setOpenAddContractOnNavigate(true)
+            setCurrentPage('contracts')
+          }}
+        >
+          <Plus className="size-4 mr-2" />
+          New Installment Sale
+        </Button>
       </div>
 
       {/* ─── Summary Cards ──────────────────────────────────────────────── */}

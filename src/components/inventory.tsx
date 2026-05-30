@@ -222,7 +222,10 @@ export function InventoryPage() {
 
   const openAddDialog = () => {
     setEditingItem(null)
-    setFormData(emptyForm)
+    setFormData({
+      ...emptyForm,
+      purchaseDate: new Date().toISOString().split('T')[0],
+    })
     setDialogOpen(true)
   }
 
