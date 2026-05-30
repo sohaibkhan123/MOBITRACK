@@ -28,9 +28,27 @@ import {
   Sparkles,
   BarChart3,
   LayoutDashboard,
+  Settings,
+  RefreshCw,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 // ── Types ───────────────────────────────────────────────────────────────────
+
+interface ShopSettings {
+  id: string
+  shopName: string
+  shopAddress: string
+  shopPhone: string
+  shopEmail: string
+  currencySymbol: string
+  currencyCode: string
+  currencyLocale: string
+  ownerName: string
+  ownerPhone: string
+  taxRate: number
+  receiptFooter: string
+}
 
 interface DashboardData {
   totalCustomers: number
@@ -49,6 +67,7 @@ interface DashboardData {
   recentPayments: RecentPayment[]
   upcomingPayments: UpcomingPayment[]
   collectionData: CollectionDay[]
+  settings: ShopSettings
 }
 
 interface RecentPayment {
@@ -75,8 +94,9 @@ interface CollectionDay {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatPKR(amount: number): string {
-  return '₨ ' + amount.toLocaleString('en-PK')
+function formatCurrency(amount: number, settings: ShopSettings | null): string {
+  const symbol = settings?.currencySymbol || '₨'
+  return symbol + ' ' + amount.toLocaleString(settings?.currencyLocale || 'en-PK')
 }
 
 function formatDate(dateStr: string): string {
@@ -113,21 +133,30 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function fetchDashboard() {
-      try {
-        const res = await fetch('/api/dashboard')
-        if (!res.ok) throw new Error('Failed to fetch dashboard data')
-        const json: DashboardData = await res.json()
-        setData(json)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error')
-      } finally {
-        setLoading(false)
+  const fetchDashboard = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/dashboard')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to fetch dashboard data')
       }
+      const json: DashboardData = await res.json()
+      setData(json)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchDashboard()
   }, [])
+
+  // Get settings from data
+  const settings = data?.settings || null
 
   // ── Navigation cards ───────────────────────────────────────────────────
 
@@ -143,9 +172,7 @@ export function DashboardPage() {
             ? { label: `${data.overdueContracts} overdue`, variant: 'destructive' as const }
             : null,
           gradient: 'from-orange-500 to-amber-500',
-          lightBg: 'bg-orange-50 dark:bg-orange-950/30',
           iconBg: 'bg-gradient-to-br from-orange-500 to-amber-500',
-          page: 'installments' as const,
           onClick: () => setCurrentPage('installments'),
         },
         {
@@ -156,9 +183,7 @@ export function DashboardPage() {
           subLabel: `${data.availableInventory} available · ${data.soldInventory} sold`,
           badge: null,
           gradient: 'from-teal-500 to-cyan-500',
-          lightBg: 'bg-teal-50 dark:bg-teal-950/30',
           iconBg: 'bg-gradient-to-br from-teal-500 to-cyan-500',
-          page: 'inventory' as const,
           onClick: () => setCurrentPage('inventory'),
         },
         {
@@ -169,9 +194,7 @@ export function DashboardPage() {
           subLabel: `${data.activeCustomers} active customers`,
           badge: null,
           gradient: 'from-rose-500 to-pink-500',
-          lightBg: 'bg-rose-50 dark:bg-rose-950/30',
           iconBg: 'bg-gradient-to-br from-rose-500 to-pink-500',
-          page: 'customers' as const,
           onClick: () => setCurrentPage('customers'),
         },
         {
@@ -184,22 +207,18 @@ export function DashboardPage() {
             ? { label: `${data.overdueContracts} overdue`, variant: 'destructive' as const }
             : null,
           gradient: 'from-violet-500 to-purple-500',
-          lightBg: 'bg-violet-50 dark:bg-violet-950/30',
           iconBg: 'bg-gradient-to-br from-violet-500 to-purple-500',
-          page: 'contracts' as const,
           onClick: () => setCurrentPage('contracts'),
         },
         {
           title: 'Payments',
           description: 'Payment records & history',
           icon: CreditCard,
-          mainValue: formatPKR(data.collectedThisMonth),
+          mainValue: formatCurrency(data.collectedThisMonth, settings),
           subLabel: 'Collected this month',
           badge: null,
           gradient: 'from-emerald-500 to-green-500',
-          lightBg: 'bg-emerald-50 dark:bg-emerald-950/30',
           iconBg: 'bg-gradient-to-br from-emerald-500 to-green-500',
-          page: 'payments' as const,
           onClick: () => setCurrentPage('payments'),
         },
         {
@@ -210,22 +229,18 @@ export function DashboardPage() {
           subLabel: 'Registered vendors',
           badge: null,
           gradient: 'from-sky-500 to-blue-500',
-          lightBg: 'bg-sky-50 dark:bg-sky-950/30',
           iconBg: 'bg-gradient-to-br from-sky-500 to-blue-500',
-          page: 'vendors' as const,
           onClick: () => setCurrentPage('vendors'),
         },
         {
           title: 'Vendor Payables',
           description: 'Vendor installment tracking',
           icon: Wallet,
-          mainValue: '₨',
+          mainValue: settings?.currencySymbol || '₨',
           subLabel: 'Vendor purchase installments',
           badge: null,
           gradient: 'from-fuchsia-500 to-pink-500',
-          lightBg: 'bg-fuchsia-50 dark:bg-fuchsia-950/30',
           iconBg: 'bg-gradient-to-br from-fuchsia-500 to-pink-500',
-          page: 'vendor-contracts' as const,
           onClick: () => setCurrentPage('vendor-contracts'),
         },
         {
@@ -233,21 +248,28 @@ export function DashboardPage() {
           description: 'Overdue & upcoming payments',
           icon: AlertTriangle,
           mainValue: data.overdueContracts.toString(),
-          subLabel: data.overdueAmount > 0 ? `${formatPKR(data.overdueAmount)} overdue` : 'No overdue',
+          subLabel: data.overdueAmount > 0 ? `${formatCurrency(data.overdueAmount, settings)} overdue` : 'No overdue',
           badge: data.overdueContracts > 0
             ? { label: 'Action needed', variant: 'destructive' as const }
             : null,
           gradient: data.overdueContracts > 0
             ? 'from-red-500 to-rose-500'
             : 'from-emerald-500 to-green-500',
-          lightBg: data.overdueContracts > 0
-            ? 'bg-red-50 dark:bg-red-950/30'
-            : 'bg-emerald-50 dark:bg-emerald-950/30',
           iconBg: data.overdueContracts > 0
             ? 'bg-gradient-to-br from-red-500 to-rose-500'
             : 'bg-gradient-to-br from-emerald-500 to-green-500',
-          page: 'due-tracking' as const,
           onClick: () => setCurrentPage('due-tracking'),
+        },
+        {
+          title: 'Admin Settings',
+          description: 'Shop name, currency & more',
+          icon: Settings,
+          mainValue: '⚙️',
+          subLabel: 'Configure your shop',
+          badge: null,
+          gradient: 'from-slate-500 to-gray-600',
+          iconBg: 'bg-gradient-to-br from-slate-500 to-gray-600',
+          onClick: () => setCurrentPage('settings'),
         },
       ]
     : []
@@ -265,18 +287,50 @@ export function DashboardPage() {
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
-                MobiTrack
+                {settings?.shopName || 'MobiTrack'}
               </h1>
               <p className="text-muted-foreground text-base mt-1">
-                Mobile Shop Installment Management System
+                {settings?.shopAddress
+                  ? `${settings.shopAddress} — Mobile Shop Installment Management`
+                  : 'Mobile Shop Installment Management System'}
               </p>
             </div>
-            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              <span>Admin Dashboard</span>
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Sparkles className="h-4 w-4 text-amber-500" />
+                <span>Admin Dashboard</span>
+              </div>
+              {settings?.currencyCode && (
+                <Badge variant="outline" className="text-xs">
+                  {settings.currencySymbol} {settings.currencyCode}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Error state with retry */}
+        {error && !loading && (
+          <div className="mb-8 rounded-2xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
+                <p className="text-sm">
+                  Failed to load dashboard data: {error}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchDashboard}
+                className="ml-4 shrink-0 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Quick Stats Bar */}
         {!loading && data && (
@@ -289,7 +343,7 @@ export function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Outstanding</p>
-                  <p className="text-lg font-bold">{formatPKR(data.totalOutstanding)}</p>
+                  <p className="text-lg font-bold">{formatCurrency(data.totalOutstanding, settings)}</p>
                 </div>
               </div>
             </div>
@@ -301,7 +355,7 @@ export function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">This Month</p>
-                  <p className="text-lg font-bold">{formatPKR(data.collectedThisMonth)}</p>
+                  <p className="text-lg font-bold">{formatCurrency(data.collectedThisMonth, settings)}</p>
                 </div>
               </div>
             </div>
@@ -344,9 +398,9 @@ export function DashboardPage() {
         </div>
 
         {/* Navigation Cards Grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           {loading
-            ? Array.from({ length: 8 }).map((_, i) => <NavCardSkeleton key={i} />)
+            ? Array.from({ length: 9 }).map((_, i) => <NavCardSkeleton key={i} />)
             : navCards.map((card) => {
                 const Icon = card.icon
                 return (
@@ -482,7 +536,7 @@ export function DashboardPage() {
                         </div>
                       </div>
                       <div className="text-right shrink-0 ml-4">
-                        <p className="text-sm font-bold">{formatPKR(p.installmentAmount)}</p>
+                        <p className="text-sm font-bold">{formatCurrency(p.installmentAmount, settings)}</p>
                         <div className="flex items-center gap-1 justify-end">
                           <CalendarClock className="h-3 w-3 text-muted-foreground" />
                           <p className={`text-xs ${isOverdue ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-muted-foreground'}`}>
@@ -528,25 +582,13 @@ export function DashboardPage() {
                     </div>
                     <div className="text-right shrink-0 ml-4">
                       <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                        +{formatPKR(p.amount)}
+                        +{formatCurrency(p.amount, settings)}
                       </p>
                       <p className="text-xs text-muted-foreground">{formatDate(p.date)}</p>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error state */}
-        {error && !loading && (
-          <div className="mt-6 rounded-2xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-5">
-            <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-              <AlertTriangle className="h-5 w-5 shrink-0" />
-              <p className="text-sm">
-                Failed to load dashboard data: {error}
-              </p>
             </div>
           </div>
         )}

@@ -3,6 +3,15 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
+    // Fetch shop settings
+    let settings = await db.shopSettings.findUnique({
+      where: { id: 'shop-settings' },
+    })
+    if (!settings) {
+      settings = await db.shopSettings.create({
+        data: { id: 'shop-settings' },
+      })
+    }
     // Customer stats
     const totalCustomers = await db.customer.count()
     const activeCustomers = await db.customer.count({
@@ -135,6 +144,7 @@ export async function GET() {
       recentPayments,
       upcomingPayments,
       collectionData,
+      settings,
     })
   } catch (error) {
     console.error('Failed to fetch dashboard stats:', error)

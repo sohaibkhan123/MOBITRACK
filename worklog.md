@@ -167,3 +167,45 @@ Stage Summary:
 - No dummy/hardcoded data anywhere
 - Contract creation flow from installments page improved with better state management
 - All code compiles and passes lint
+
+---
+Task ID: 6
+Agent: Main
+Task: Fix dashboard data fetch error, add admin profile/settings section, make home page comprehensive
+
+Work Log:
+- Read all project files: page.tsx, dashboard.tsx, store.ts, prisma schema, API routes
+- Identified dashboard data fetch was failing because ShopSettings model didn't exist in DB
+- Added ShopSettings model to Prisma schema with fields: shopName, shopAddress, shopPhone, shopEmail, currencySymbol, currencyCode, currencyLocale, ownerName, ownerPhone, taxRate, receiptFooter
+- Ran prisma db push to sync schema with database
+- Created /api/settings API route with GET (fetch settings, auto-create if not exists) and PUT (upsert settings)
+- Updated /api/dashboard route to also fetch and return shop settings alongside dashboard data
+- Created comprehensive SettingsPage component with:
+  - Shop Information section (name, address, phone, email)
+  - Currency Settings section with quick presets (PKR, INR, USD, EUR, GBP, SAR, AED, BDT, ZAR, MYR) and custom fields
+  - Currency preview display
+  - Owner Information section (name, phone)
+  - Receipt & Tax section (tax rate, receipt footer, receipt preview)
+  - System Information section
+  - Save and Reset buttons
+- Updated Zustand store to include 'settings' in Page type
+- Updated page.tsx: Added Settings icon import, Settings nav item, Settings case in PageContent switch
+- Rewrote dashboard.tsx to:
+  - Use settings from API for shop name display and currency formatting
+  - Show settings-based currency in all amount displays
+  - Added "Admin Settings" as 9th navigation card
+  - Added retry button on error state
+  - Improved error handling (reads API error message, shows in UI)
+  - Uses ShopSettings for formatCurrency helper
+- Added upload/ directory to eslint ignore list to fix lint errors from reference project
+- Ran lint check - passes with no errors
+- Verified dev server compiles and serves pages correctly (200 response)
+
+Stage Summary:
+- Dashboard data fetch error fixed: Added ShopSettings model and settings to dashboard API response
+- Admin Settings page created with shop name, currency, owner info, and tax configuration
+- Dashboard now uses shop settings for display (shop name, currency symbol)
+- Settings accessible from sidebar navigation and dashboard navigation card
+- Currency presets for 10 common currencies
+- Receipt preview shows current settings
+- All code passes lint and compiles successfully

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type Page = 'dashboard' | 'inventory' | 'customers' | 'vendors' | 'contracts' | 'payments' | 'due-tracking' | 'vendor-contracts' | 'customer-detail' | 'contract-detail' | 'installments'
+export type Page = 'dashboard' | 'inventory' | 'customers' | 'vendors' | 'contracts' | 'payments' | 'due-tracking' | 'vendor-contracts' | 'customer-detail' | 'contract-detail' | 'installments' | 'settings'
 
 interface AppState {
   currentPage: Page

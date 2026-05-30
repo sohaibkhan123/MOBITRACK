@@ -172,3 +172,20 @@ model VendorInstallmentPayment {
 
   vendorContract    VendorContract @relation(fields: [vendorContractId], references: [id])
 }
+
+model ShopSettings {
+  id              String   @id @default("shop-settings")
+  shopName        String   @default("MobiTrack")
+  shopAddress     String   @default("")
+  shopPhone       String   @default("")
+  shopEmail       String   @default("")
+  currencySymbol  String   @default("₨")
+  currencyCode    String   @default("PKR")
+  currencyLocale  String   @default("en-PK")
+  ownerName       String   @default("")
+  ownerPhone      String   @default("")
+  taxRate         Float    @default(0)
+  receiptFooter   String   @default("Thank you for your business!")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

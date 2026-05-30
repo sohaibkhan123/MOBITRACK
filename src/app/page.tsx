@@ -12,6 +12,7 @@ import { VendorContractsPage } from '@/components/vendor-contracts'
 import { ContractDetail } from '@/components/contract-detail'
 import { CustomerDetail } from '@/components/customer-detail'
 import { InstallmentsPage } from '@/components/installments'
+import { SettingsPage } from '@/components/settings'
 import { useState } from 'react'
 import {
   Package,
@@ -27,6 +28,7 @@ import {
   CalendarClock,
   Home as HomeIcon,
   AlertCircle,
+  Settings,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -42,6 +44,7 @@ const navItems: { page: Page; label: string; icon: React.ReactNode }[] = [
   { page: 'payments', label: 'Payments', icon: <CreditCard className="h-5 w-5" /> },
   { page: 'vendor-contracts', label: 'Vendor Payables', icon: <Wallet className="h-5 w-5" /> },
   { page: 'due-tracking', label: 'Due Tracking', icon: <AlertCircle className="h-5 w-5" /> },
+  { page: 'settings', label: 'Settings', icon: <Settings className="h-5 w-5" /> },
 ]
 
 function PageContent({ page }: { page: Page }) {
@@ -81,6 +84,8 @@ function PageContent({ page }: { page: Page }) {
       return <VendorContractsPage />
     case 'due-tracking':
       return <DueTrackingPage />
+    case 'settings':
+      return <SettingsPage />
     case 'customer-detail':
       return selectedCustomerId ? (
         <CustomerDetail
