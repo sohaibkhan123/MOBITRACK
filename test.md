@@ -1,2 +1,0 @@
-# MOBITRACK
-Installments tracking system
